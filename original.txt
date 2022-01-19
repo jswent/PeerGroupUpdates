@@ -1,0 +1,93 @@
+def checkDate(elementText):
+    date_split = re.split(' |,', str(elementText))
+
+    if (date_split[0] == 'May' and int(date_split[1]) >= 15) or date_split[0] == 'June' or date_split[0] == 'July':
+        return True
+    else:
+        return False
+
+from openpyxl import load_workbook
+from openpyxl.styles import Alignment
+import time
+import re
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+
+# Specify webdriver path and open webpage
+driver = webdriver.Firefox(executable_path=r'D:\Downloads\geckodriver.exe')
+myRow = 3
+
+# Open Excel Spreadsheet and determine which sheet to edit
+dest = 'D:\Downloads\Peer Group Updates in Q2 2021.xlsx'
+wb = load_workbook(dest)
+sheet = wb.active
+
+while 0 == 0:
+
+    if len(sheet.cell(row=myRow, column=3).value) > 4 or myRow == 8:
+        myRow = myRow + 1
+
+    print(myRow)
+
+    driver.get('https://www.sec.gov/edgar/searchedgar/companysearch.html')
+
+    edgar_search_box = driver.find_element_by_xpath("""//*[@id="company"]""")
+    edgar_search_box.send_keys(str(sheet.cell(row=myRow, column=3).value))
+    edgar_search_box.send_keys(Keys.ENTER)
+
+    time.sleep(3)
+
+    try:
+        select_8k_filings = driver.find_element_by_xpath("""/html/body/main/div[4]/div[2]/div[2]/h5""")
+        select_8k_filings.click()
+    except:
+        myRow = myRow + 1
+        continue
+
+    check = False
+    index = 1
+    events_occurred  = ""
+
+    while not check:
+        try:
+            filing_8k = driver.find_element_by_xpath("""/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/a[1]""")
+            if checkDate(filing_8k.text):
+                events_occurred_local = driver.find_element_by_xpath("""/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/small""")
+                events_occurred = events_occurred + events_occurred_local.text + "\n"
+            else:
+                check = True
+            index = index + 1
+        except:
+            check = True
+
+    sheet.cell(row=myRow,column=5).value = events_occurred
+    sheet.cell(row=myRow,column=5).alignment = Alignment(wrapText=True)
+
+    most_recent_filing = driver.find_element_by_xpath("""/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[1]/a[1]""")
+    filing_date = most_recent_filing.text
+    # print(filing_date)
+    date_split = re.split(' |,', str(filing_date))
+
+    if (date_split[0] == 'May' and int(date_split[1]) >= 15) or date_split[0] == 'June' or date_split[0] == 'July':
+        sheet.cell(row=myRow,column=4).value = "Yes"
+    else:
+        sheet.cell(row=myRow,column=4).value = "No"
+
+    #---Check 10Q---#
+    select_10kq_filings = driver.find_element_by_xpath("""/html/body/main/div[4]/div[2]/div[3]/h5""")
+    select_10kq_filings.click()
+
+    most_recent_filing = driver.find_element_by_xpath("""/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[1]/a[1]""")
+    filing_date = most_recent_filing.text
+    #print(sheet.cell(row=myRow,column=2).value + " Filing Date: " +  filing_date)
+    date_split = re.split(' |,', str(filing_date))
+
+    if (date_split[0] == 'May' and int(date_split[1]) >= 15) or date_split[0] == 'June' or date_split[0] == 'July':
+        sheet.cell(row=myRow, column=6).value = "Yes"
+    else:
+        #print(date_split[0] + " | " + date_split[1])
+        sheet.cell(row=myRow, column=6).value = "No"
+    #---END---#
+
+    wb.save(dest)
+    myRow = myRow + 1

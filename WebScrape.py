@@ -110,7 +110,7 @@ def runLoop():
         # print(filing_date)
         date_split = re.split(' |, ', str(filing_date))
 
-        if (date_split[0] == 'October') or date_split[0] == 'November' or date_split[0] == 'December' or date_split[0] == 'January':
+        if (date_split[0] == 'January') or date_split[0] == 'February' or date_split[0] == 'March' or date_split[0] == 'April':
             sheet.cell(row=myRow, column=4).value = "Yes"
         else:
             sheet.cell(row=myRow, column=4).value = "No"
@@ -129,7 +129,7 @@ def runLoop():
         # print(sheet.cell(row=myRow,column=2).value + " Filing Date: " +  filing_date)
         date_split = re.split(' |, ', str(filing_date))
 
-        if (date_split[0] == 'October') or date_split[0] == 'November' or date_split[0] == 'December' or date_split[0] == 'January':
+        if (date_split[0] == 'January') or date_split[0] == 'February' or date_split[0] == 'March' or date_split[0] == 'April':
             sheet.cell(row=myRow, column=6).value = "Yes"
         else:
             # print(date_split[0] + " | " + date_split[1])

@@ -1,8 +1,4 @@
-import time
+import WebScrape
 
-import webScrape
-
-webScrape.runLoop()
-
-# print(splits[5])
-# print(splits[11])
+if __name__ == "__main__":
+    WebScrape.runLoop()

@@ -4,15 +4,18 @@ import time
 import re
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
 from datetime import date
+import datetime
 
 # -----GLOBAL-----#
 
-dest = "~/Downloads/Peer Group Updates in Q4 2021.xlsx"
-dateBound = "August 1, 2021"
+dest = "/Users/jswent/Downloads/Peer Group Updates in Q1 2022.xlsx"
+dateBound = "January 1, 2022"
+quater = "q"
 
 # Specify webdriver path and open webpage
-driver = webdriver.Chrome(executable_path=r'./chromedriver')
+driver = webdriver.Firefox(executable_path=r'./geckodriver')
 myRow = 3
 
 # Open Excel Spreadsheet and determine which sheet to edit
@@ -20,19 +23,15 @@ wb = load_workbook(dest)
 sheet = wb.active
 
 def findDateNumber(month):
-    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October',
-              'November', 'December']
+    datetime_object = datetime.datetime.strptime(month, "%B")
+    month_number = datetime_object.month
 
-    for i in range(12):
-        if month is months[i]:
-            return i + 1
-
-    return None
+    return month_number
 
 
 def checkDate(elementText, dateBoundStr):
-    date_split = re.split(' |,', str(elementText))
-    bound_split = re.split(' |,', str(dateBoundStr))
+    date_split = re.split(' |, ', str(elementText))
+    bound_split = re.split(' |, ', str(dateBoundStr))
 
     inp_date = date(int(bound_split[2]), findDateNumber(bound_split[1]), int(bound_split[0]))
     pulled_date = date(int(date_split[2]), findDateNumber(date_split[0]), int(date_split[1]))
@@ -50,6 +49,9 @@ def setWorkbokPath(path):
 def setDateBound(dateStr):
     dateBound = dateStr
 
+def setQuarter(quarterStr):
+    quarter  =  quarterStr
+
 
 def runLoop():
     global myRow
@@ -65,14 +67,14 @@ def runLoop():
 
         driver.get('https://www.sec.gov/edgar/searchedgar/companysearch.html')
 
-        edgar_search_box = driver.find_element_by_xpath("""//*[@id="company"]""")
+        edgar_search_box = driver.find_element(By.XPATH, """//*[@id="company"]""")
         edgar_search_box.send_keys(str(sheet.cell(row=myRow, column=3).value))
         edgar_search_box.send_keys(Keys.ENTER)
 
         time.sleep(3)
 
         try:
-            select_8k_filings = driver.find_element_by_xpath("""/html/body/main/div[4]/div[2]/div[2]/h5""")
+            select_8k_filings = driver.find_element(By.XPATH, """/html/body/main/div[4]/div[2]/div[2]/h5""")
             select_8k_filings.click()
         except:
             myRow = myRow + 1
@@ -84,47 +86,50 @@ def runLoop():
 
         while not check:
             try:
-                filing_8k = driver.find_element_by_xpath(
+                filing_8k = driver.find_element(By.XPATH,
                     """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/a[1]""")
-                if checkDate(filing_8k.text):
-                    events_occurred_local = driver.find_element_by_xpath(
-                        """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/small""")
+                if checkDate(filing_8k.text, "1 October, 2021"):
+                    events_occurred_local = driver.find_element(By.XPATH,
+                        """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/small/ul""")
+                    print(events_occurred_local.text)
                     events_occurred = events_occurred + events_occurred_local.text + "\n"
                 else:
                     check = True
                 index = index + 1
-            except:
+            except Exception as e:
+                #print("excepted at ", index)
+                #print(e)
                 check = True
 
         sheet.cell(row=myRow, column=5).value = events_occurred
         sheet.cell(row=myRow, column=5).alignment = Alignment(wrapText=True)
 
-        most_recent_filing = driver.find_element_by_xpath(
+        most_recent_filing = driver.find_element(By.XPATH,
             """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[1]/a[1]""")
         filing_date = most_recent_filing.text
         # print(filing_date)
-        date_split = re.split(' |,', str(filing_date))
+        date_split = re.split(' |, ', str(filing_date))
 
-        if (date_split[0] == 'May' and int(date_split[1]) >= 15) or date_split[0] == 'June' or date_split[0] == 'July':
+        if (date_split[0] == 'October') or date_split[0] == 'November' or date_split[0] == 'December' or date_split[0] == 'January':
             sheet.cell(row=myRow, column=4).value = "Yes"
         else:
             sheet.cell(row=myRow, column=4).value = "No"
 
-        # events_occurred = driver.find_element_by_xpath("""/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[1]/small/ul""")
+        # events_occurred = driver.find_element(By.XPATH, """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[1]/small/ul""")
         # sheet.cell(row=myRow,column=5).value = str(events_occurred.text)
         # sheet.cell(row=myRow,column=5).alignment = Alignment(wrapText=True)
 
         # ---Check 10Q---#
-        select_10kq_filings = driver.find_element_by_xpath("""/html/body/main/div[4]/div[2]/div[3]/h5""")
+        select_10kq_filings = driver.find_element(By.XPATH, """/html/body/main/div[4]/div[2]/div[3]/h5""")
         select_10kq_filings.click()
 
-        most_recent_filing = driver.find_element_by_xpath(
+        most_recent_filing = driver.find_element(By.XPATH,
             """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[1]/a[1]""")
         filing_date = most_recent_filing.text
         # print(sheet.cell(row=myRow,column=2).value + " Filing Date: " +  filing_date)
-        date_split = re.split(' |,', str(filing_date))
+        date_split = re.split(' |, ', str(filing_date))
 
-        if (date_split[0] == 'May' and int(date_split[1]) >= 15) or date_split[0] == 'June' or date_split[0] == 'July':
+        if (date_split[0] == 'October') or date_split[0] == 'November' or date_split[0] == 'December' or date_split[0] == 'January':
             sheet.cell(row=myRow, column=6).value = "Yes"
         else:
             # print(date_split[0] + " | " + date_split[1])
@@ -136,10 +141,10 @@ def runLoop():
             index = 1
 
             while not check:
-                filing_date_scan = driver.find_element_by_xpath(
+                filing_date_scan = driver.find_element(By.XPATH,
                     """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/a[1]""")
-                scan_events_occurred = driver.find_element_by_xpath(
-                    """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/small""")
+                scan_events_occurred = driver.find_element(By.XPATH,
+                    """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/small/ul""")
                 if "5.07" in scan_events_occurred.text:
                     filing_date_scan.click()
 

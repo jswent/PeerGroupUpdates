@@ -16,7 +16,7 @@ quater = "q"
 
 # Specify webdriver path and open webpage
 driver = webdriver.Firefox(executable_path=r'./geckodriver')
-myRow = 3
+myRow = 2
 
 # Open Excel Spreadsheet and determine which sheet to edit
 wb = load_workbook(dest)
@@ -57,7 +57,7 @@ def runLoop():
     global myRow
     while 0 == 0:
 
-        if len(sheet.cell(row=myRow, column=3).value) > 4 or myRow == 8:
+        if len(sheet.cell(row=myRow, column=3).value) > 4:
             myRow = myRow + 1
 
         print(myRow)
@@ -136,17 +136,17 @@ def runLoop():
             sheet.cell(row=myRow, column=6).value = "No"
         # ---END---#
 
-        if "5.07" in sheet.cell(row=myRow, column=5).value:
-            check = False
-            index = 1
-
-            while not check:
-                filing_date_scan = driver.find_element(By.XPATH,
-                    """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/a[1]""")
-                scan_events_occurred = driver.find_element(By.XPATH,
-                    """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/small/ul""")
-                if "5.07" in scan_events_occurred.text:
-                    filing_date_scan.click()
+        # if "5.07" in sheet.cell(row=myRow, column=5).value:
+        #     check = False
+        #     index = 1
+        #
+        #     while not check:
+        #         filing_date_scan = driver.find_element(By.XPATH,
+        #             """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/a[1]""")
+        #         scan_events_occurred = driver.find_element(By.XPATH,
+        #             """/html/body/main/div[4]/div[2]/div[2]/div/div/ul/li[""" + str(index) + """]/small/ul""")
+        #         if "5.07" in scan_events_occurred.text:
+        #             filing_date_scan.click()
 
         wb.save(dest)
         myRow = myRow + 1
